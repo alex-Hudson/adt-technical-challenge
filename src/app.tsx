@@ -1,13 +1,15 @@
 import { Box, Card, Grid } from "@mui/material";
 import { Feature, MultiPolygon } from "geojson";
 import { RampData, RampProperties } from "./types";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
+import { TasksContext, TasksDispatchContext } from "./visible-features-context";
 
 import { BoatMatterialsBar } from "./materials-bar-chart";
 import { Header } from "./header";
 import { Map } from "./map";
 import { RampTable } from "./table";
 import { ErrorBoundary } from "react-error-boundary";
+import tasksReducer from "./visible-features-reducer";
 
 export const App = () => {
   const [data, setData] = useState<RampData | undefined>(undefined);
@@ -15,6 +17,9 @@ export const App = () => {
     Feature<MultiPolygon, RampProperties>[] | []
   >([]);
 
+  const [temp, dispatch] = useReducer(tasksReducer, visibleFeatures);
+
+  console.log(temp)
   const getData = async () => {
     const results = await fetch("./data.json");
     setData(await results.json());
@@ -28,6 +33,11 @@ export const App = () => {
   useEffect(() => {
     if (data) {
       setVisibleFeatures(data.features);
+
+      dispatch({
+        type: 'changed',
+        visibleFeatures: data.features,
+      });
     }
   }, [data])
 
@@ -37,6 +47,9 @@ export const App = () => {
     <>
       <Header />
       <Box sx={{ flexGrow: 1 }} margin={3}>
+      <TasksContext.Provider value={temp}>
+      <TasksDispatchContext.Provider value={dispatch}>
+
         <Grid container spacing={2}>
           <Grid item xs={8}>
             <Card elevation={2} sx={{ height: 400 }}>
@@ -58,6 +71,8 @@ export const App = () => {
             </Card>
           </Grid>
         </Grid>
+        </TasksDispatchContext.Provider>
+        </TasksContext.Provider>
       </Box>
     </>
   );

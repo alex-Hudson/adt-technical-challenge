@@ -3,9 +3,9 @@ import "../styles/map.css";
 
 import { Feature, MultiPolygon } from "geojson";
 import { RampData, RampProperties } from "./types";
-import React, { Dispatch, SetStateAction, useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { TasksContext, TasksDispatchContext } from "./visible-features-context";
+import React, { Dispatch, SetStateAction, useState, useEffect, useRef, useMemo, useCallback, useContext } from "react";
 import ReactMap, { Marker, Popup, ViewStateChangeEvent } from "react-map-gl";
-
 import maplibregl from "maplibre-gl";
 
 export const Map = ({
@@ -19,6 +19,14 @@ export const Map = ({
     SetStateAction<Feature<MultiPolygon, RampProperties>[] | []>
   >;
 }) => {
+  const tasks = useContext(TasksContext);
+  const dispatch = useContext(TasksDispatchContext);
+
+  console.log(
+    "Map component rendered with visibleFeatures: ",
+    tasks
+  );
+  
   if (!visibleFeatures) {
     visibleFeatures = ramps.features;
   }
@@ -55,6 +63,11 @@ export const Map = ({
         return inBounds;
       }
     );
+
+    dispatch({
+      type: 'changed',
+      visibleFeatures: visibleRamps,
+    });
     setVisibleFeatures(visibleRamps);
   };
 
